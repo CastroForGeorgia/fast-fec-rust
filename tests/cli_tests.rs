@@ -75,7 +75,6 @@ where
     let cmd = get_command();
     let matches = cmd.try_get_matches_from(args)?;
 
-    // Parse values into a CliConfig struct.
     let fec_id = matches
         .get_one::<String>("filing-id-or-file")
         .cloned()
@@ -91,13 +90,14 @@ where
         .cloned()
         .unwrap_or_else(|| "output".to_string());
     let write_to_disk = matches.get_flag("write-to-disk");
+
     let buffer_size = matches
         .get_one::<String>("buffer-size")
-        .unwrap_or(&"4096".to_string())
-        .parse::<usize>()
-        .unwrap_or(4096);
+        .map(|s| s.parse::<usize>())
+        .transpose() // Handle potential parse errors
+        .map_err(|_| anyhow::anyhow!("Invalid buffer size"))? // Return error for invalid input
+        .unwrap_or(4096); // Default value if not provided
 
-    // For testing, we'll assume STDIN is not piped.
     let stdin_piped = false;
     let use_stdin = stdin_piped && !disable_stdin && fec_id.is_empty();
 
@@ -178,4 +178,224 @@ fn test_include_filing_id_flag() {
     assert_eq!(config, expected);
 }
 
-// Repeat for other test cases
+#[test]
+fn test_silent_flag() {
+    let args = vec!["fast-fec-rust", "--silent"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: true,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_warn_flag() {
+    let args = vec!["fast-fec-rust", "--warn"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: true,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_disable_stdin_flag() {
+    let args = vec!["fast-fec-rust", "--disable-stdin"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_usage_flag() {
+    let args = vec!["fast-fec-rust", "--usage"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: true,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_output_directory_custom_value() {
+    let args = vec!["fast-fec-rust", "--output-directory", "custom_dir"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "custom_dir".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_write_to_disk_flag() {
+    let args = vec!["fast-fec-rust", "--write-to-disk"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: true,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_custom_buffer_size() {
+    let args = vec!["fast-fec-rust", "--buffer-size", "8192"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 8192,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_invalid_buffer_size() {
+    let args = vec!["fast-fec-rust", "--buffer-size", "invalid"];
+    let result = simulate_parse_args(args);
+
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("Invalid buffer size"));
+}
+
+#[test]
+fn test_all_flags_combined() {
+    let args = vec![
+        "fast-fec-rust",
+        "some_id",
+        "--include-filing-id",
+        "--silent",
+        "--warn",
+        "--disable-stdin",
+        "--usage",
+        "--output-directory",
+        "custom_output",
+        "--write-to-disk",
+        "--buffer-size",
+        "16384",
+    ];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "some_id".to_string(),
+        include_filing_id: true,
+        silent: true,
+        warn: true,
+        use_stdin: false,
+        show_usage: true,
+        output_directory: "custom_output".to_string(),
+        write_to_disk: true,
+        buffer_size: 16384,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_no_filing_id_with_stdin_disabled() {
+    let args = vec!["fast-fec-rust", "--disable-stdin"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
+
+#[test]
+fn test_filing_id_with_disable_stdin() {
+    let args = vec!["fast-fec-rust", "12345", "--disable-stdin"];
+    let config = simulate_parse_args(args).expect("Failed to parse args");
+
+    let expected = CliConfig {
+        fec_id: "12345".to_string(),
+        include_filing_id: false,
+        silent: false,
+        warn: false,
+        use_stdin: false,
+        show_usage: false,
+        output_directory: "output".to_string(),
+        write_to_disk: false,
+        buffer_size: 4096,
+    };
+
+    assert_eq!(config, expected);
+}
