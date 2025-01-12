@@ -314,7 +314,7 @@ impl WriterContext {
             // Write to file or custom
             self.write_bytes(filename, extension, s.as_bytes())?;
             // Also handle custom line accumulation
-            if let Some(ref mut custom_fn) = self.custom_line_fn {
+            if let Some(ref mut _custom_fn) = self.custom_line_fn {
                 self.custom_line_buffer.push_str(s);
             }
         }
