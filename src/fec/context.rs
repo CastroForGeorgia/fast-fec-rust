@@ -41,8 +41,8 @@ impl FecContext {
         warn: bool,
     ) -> Self {
         FecContext {
-            f99_text_start: Regex::new(r"(?i)BEGIN").unwrap(),
-            f99_text_end: Regex::new(r"(?i)END").unwrap(),
+            f99_text_start: Regex::new(r"(?i)^\s*\[BEGIN ?TEXT\]\s*$").unwrap(),
+            f99_text_end: Regex::new(r"(?i)^\s*\[END ?TEXT\]\s*$").unwrap(),
             version: None,
             version_length: 0,
             silent,
