@@ -330,7 +330,7 @@ impl WriterContext {
             self.local_buffer_pos += cbytes.len();
         } else {
             self.write_bytes(filename, extension, cbytes.as_bytes())?;
-            if let Some(ref mut custom_fn) = self.custom_line_fn {
+            if let Some(ref mut _custom_fn) = self.custom_line_fn {
                 self.custom_line_buffer.push_str(cbytes);
             }
         }

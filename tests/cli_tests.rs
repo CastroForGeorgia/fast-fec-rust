@@ -1,5 +1,5 @@
 use clap::{ArgAction, Command};
-use fast_fec_rust::cli::args::{parse_args, CliConfig};
+use fast_fec_rust::cli::args::CliConfig;
 
 /// Helper function to create a Command instance identical to the one in `parse_args`.
 fn get_command() -> Command {
