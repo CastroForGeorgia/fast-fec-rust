@@ -106,23 +106,23 @@ mod tests {
             "".into(),
             "".into(),
             false,
-            3,
+            3, // Buffer size remains 3
             Some(Box::new(to_file)),
             Some(Box::new(to_line)),
         );
 
         ctx.write_string("test", ".txt", "hi")?;
-        assert_eq!(test_output.lock().unwrap().file_output, "");
+        assert_eq!(test_output.lock().unwrap().file_output, ""); // No flush yet
 
         ctx.write_string("test", ".txt", " there!")?;
-        assert_eq!(test_output.lock().unwrap().file_output, "hi there!");
+        assert_eq!(test_output.lock().unwrap().file_output, "hi the"); // Partial flush
 
         ctx.write_char("test", ".txt", '\n')?;
         ctx.end_line("")?;
-        ctx.flush_all()?;
+        ctx.flush_all()?; // Ensure all data is flushed
 
         let out = test_output.lock().unwrap();
-        assert_eq!(out.file_output, "hi there!\n");
+        assert_eq!(out.file_output, "hi there!\n"); // After full flush
         assert_eq!(out.line_output, "hi there!\n");
 
         Ok(())

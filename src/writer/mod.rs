@@ -251,31 +251,30 @@ impl WriterContext {
     fn flush_buffer(&mut self, filename: &str, extension: &str) -> Result<()> {
         // Attempt to get the file entry
         let (buffer, file_option) = {
-            // Use `get_file_entry` to retrieve or create the file entry
             let (entry, _) = self.get_file_entry(filename, extension)?;
 
-            // If the buffer is empty, there is nothing to flush
             if entry.buffer_file.is_empty() {
-                return Ok(());
+                return Ok(()); // Nothing to flush
             }
 
-            // Extract the buffer and the file handle
-            let buffer_contents = entry.buffer_file.buffer.clone(); // Clone the buffer content
-            let file_clone = entry.file.as_ref().map(|f| f.try_clone());
+            // Clone the buffer content to write it
+            let buffer_contents = entry.buffer_file.buffer.clone();
 
-            // Clear the buffer
+            // Clear the buffer after cloning
             entry.buffer_file.clear();
 
-            // Return the buffer content and file handle clone
+            // Get a cloned file handle (if writing to disk)
+            let file_clone = entry.file.as_ref().map(|f| f.try_clone());
+
             (buffer_contents, file_clone)
         };
 
-        // If a custom write function is provided, use it to write the buffer
+        // Use the custom write function if set
         if let Some(custom_fn) = &self.custom_write_fn {
             custom_fn(filename, extension, &buffer)?;
         }
 
-        // If a file handle is available, write the buffer to it
+        // Write to the file if a file handle exists
         if let Some(file_result) = file_option {
             let mut file =
                 file_result.map_err(|e| anyhow!("Failed to clone file handle: {}", e))?;
