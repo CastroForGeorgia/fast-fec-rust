@@ -67,7 +67,7 @@ pub fn parse_fec<R: BufRead>(
 /// - Handles F99 text blocks.
 /// - Updates `ctx` based on parsed data.
 /// - Writes output via `writer`.
-fn parse_line(ctx: &mut FecContext, line: &str, writer: &mut WriterContext) -> Result<()> {
+pub fn parse_line(ctx: &mut FecContext, line: &str, writer: &mut WriterContext) -> Result<()> {
     let trimmed_line = line.trim();
 
     // Handle F99 text blocks
@@ -121,7 +121,7 @@ fn parse_line(ctx: &mut FecContext, line: &str, writer: &mut WriterContext) -> R
 /// Parse a line using a custom delimiter (e.g., ASCII28).
 ///
 /// - Splits the line into fields based on the delimiter.
-fn parse_with_delimiter(line: &str, delimiter: char) -> Result<Vec<String>> {
+pub fn parse_with_delimiter(line: &str, delimiter: char) -> Result<Vec<String>> {
     Ok(line.split(delimiter).map(|s| s.to_string()).collect())
 }
 

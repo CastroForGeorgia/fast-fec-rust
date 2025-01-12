@@ -1,8 +1,6 @@
-//! Defines the `FecContext` struct, mirroring the original `FEC_CONTEXT` from C.
-
 use regex::Regex;
 
-/// The primary context for managing FEC parsing state.
+#[derive(Debug)]
 pub struct FecContext {
     pub f99_text_start: Regex,     // Regex for detecting F99 text start
     pub f99_text_end: Regex,       // Regex for detecting F99 text end
@@ -18,14 +16,33 @@ pub struct FecContext {
     pub fec_id: String,            // Filing ID or file name
 }
 
+impl PartialEq for FecContext {
+    fn eq(&self, other: &Self) -> bool {
+        self.f99_text_start.as_str() == other.f99_text_start.as_str() &&
+        self.f99_text_end.as_str() == other.f99_text_end.as_str() &&
+        self.version == other.version &&
+        self.version_length == other.version_length &&
+        self.silent == other.silent &&
+        self.warn == other.warn &&
+        self.use_ascii28 == other.use_ascii28 &&
+        self.summary == other.summary &&
+        self.form_type == other.form_type &&
+        self.num_fields == other.num_fields &&
+        self.include_filing_id == other.include_filing_id &&
+        self.fec_id == other.fec_id
+    }
+}
+
 impl FecContext {
-    /// Create a new FecContext with the given configuration.
-    pub fn new(fec_id: String, include_filing_id: bool, silent: bool, warn: bool) -> Self {
-        Self {
-            f99_text_start: Regex::new(r"(?i)^\s*\[BEGIN ?TEXT\]\s*$")
-                .expect("Failed to compile F99 start regex"),
-            f99_text_end: Regex::new(r"(?i)^\s*\[END ?TEXT\]\s*$")
-                .expect("Failed to compile F99 end regex"),
+    pub fn new(
+        fec_id: String,
+        include_filing_id: bool,
+        silent: bool,
+        warn: bool,
+    ) -> Self {
+        FecContext {
+            f99_text_start: Regex::new(r"(?i)BEGIN").unwrap(),
+            f99_text_end: Regex::new(r"(?i)END").unwrap(),
             version: None,
             version_length: 0,
             silent,
