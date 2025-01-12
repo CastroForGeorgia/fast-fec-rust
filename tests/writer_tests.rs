@@ -184,7 +184,7 @@ mod tests {
         let test_output = reset_output();
 
         let to_file = {
-            let test_output = Arc::clone(&test_output);
+            let _test_output = Arc::clone(&test_output);
             move |_: &str, _: &str, _: &[u8]| -> Result<()> { Ok(()) }
         };
 

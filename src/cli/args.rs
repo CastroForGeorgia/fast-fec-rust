@@ -7,7 +7,7 @@ use clap::{Arg, ArgAction, Command};
 use atty;
 
 /// A struct representing parsed command-line arguments.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)] // Derive Debug and PartialEq
 pub struct CliConfig {
     pub fec_id: String,           // Filing ID or file path
     pub include_filing_id: bool,  // Whether to include a filing_id column
